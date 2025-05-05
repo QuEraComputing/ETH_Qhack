@@ -19,4 +19,4 @@ This year’s ETH Quantum Hackathon challenges require a _notebook_ implementati
 
 For solution submissions should follow guidelines from Dorahacks and the hackathon organizers!
 
-### Evaluationm criteria
+### Evaluation criteria
