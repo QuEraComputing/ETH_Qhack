@@ -1,4 +1,4 @@
-General directions on the challenge statement can be found in the _YQuantum_2025_challenge.pdf_ file. Follow below for extra relevant information.
+General directions on the challenge statement can be found in the challenge .pdf file. Follow below for extra relevant information.
 
 ## Installing Bloqade and other packages 
 
