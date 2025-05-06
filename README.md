@@ -4,7 +4,7 @@ General directions on the challenge statement can be found in the challenge .pdf
 
 All work for this challenge will be based on Bloqade, QuEra's neutral atom emulator and SDK, and - if you feel insispired for something a bit more advanced - on Kirin, our compiler development infrastructure.
 
-Installation instructions for Bloqade and all sub-packages necessary can be found here [here](https://bloqade.quera.com/latest/), and amount to little more than `pip install bloqade`. The little more is the Bloqade implementation of the PyQrack simulator, which can be obtained via `pip install 'bloqade-pyqrack[pyqrack]'`.
+Installation instructions for Bloqade and all sub-packages necessary can be found here [here](https://bloqade.quera.com/latest/), and amount to little more than `pip install bloqade`. 
 
 ### Pre-made environment on qBraid
 
