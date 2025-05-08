@@ -1,5 +1,7 @@
 General directions on the challenge statement can be found in the challenge .pdf file. Follow below for extra relevant information.
 
+[<img src="https://qbraid-static.s3.amazonaws.com/logos/Launch_on_qBraid_white.png" width="150">](https://account.qbraid.com?gitHubUrl=https://github.com/QuEraComputing/ETH_Qhack.git&utm_source=github&utm_campaign=quera&redirectUrl=README.md&envId=eth_qh_9h3ojh)
+
 ## Installing Bloqade and other packages 
 
 All work for this challenge will be based on Bloqade, QuEra's neutral atom emulator and SDK, and - if you feel insispired for something a bit more advanced - on Kirin, our compiler development infrastructure.
