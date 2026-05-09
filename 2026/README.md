@@ -30,9 +30,9 @@ This repo contains everything you need to get going. Mainly:
 
 - [`challenge.md`](challenge.md) contains the formal challenge statement, with directions and guidelines
 - `assets` folder contains images and files that are relevant for different parts of the challenge
-- [`bloqade_tutorial.ipynb`](bloqade_tutorial.ipynb) contains the tutorial from the workshop which you will find very useful
+- [`bloqade_tutorial_eth.ipynb`](bloqade_tutorial.ipynb) contains the tutorial from the workshop which you will find very useful
 - `ETHQHack.pptx` contains the presentation from the workshop
-- [`pyproject.toml`](pyproject.toml) is a configuration file from which you can easily recover all packages needed for the challenge, in their correct version
+- [`pyproject.toml`](../pyproject.toml) is a configuration file from which you can easily recover all packages needed for the challenge, in their correct version
 
 ### Coding Infrastructure
 
@@ -63,13 +63,21 @@ Verify:
 uv --version
 ```
 
-**2) Install dependencies from the provided TOML**
+**2) Install python version and dependencies from the provided TOML**
 
 From the project folder (where the TOML lives):
 
 ```bash
 # create and sync virtual environment according to toml
+uv python install 3.12
 uv sync
+```
+
+**3) Use the environment**
+You can either activate it automatically using or IDE 
+or manually from your terminal using:
+
+```bash
 # activate it
 source .venv/bin/activate    # macOS/Linux
 # .venv\\Scripts\\activate     # Windows (PowerShell)
