@@ -7,5 +7,5 @@ requires-python = "==3.12.*"
 dependencies = [
     "bloqade>=0.32.0",
     "bloqade-circuit[tsim]>=0.11.2",
-    "jupyterlab>=4.5.3",
+    "jupyterlab>=4.5.7",
 ]
