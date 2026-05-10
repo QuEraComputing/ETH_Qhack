@@ -1,0 +1,110 @@
+# Note: This is a STAR circuit for preparing a single logical qubit in the |+> state
+# that has been rotated by 0.01*pi around the Z axis.
+
+# The steps are:
+
+# 1. Initialize a logical |+> state 
+
+# 2. Perform d physical rotations
+
+# 3. Perform two rounds of stabilizer measurement
+
+# 4. Now post-select on perfect stabilizers
+
+# 5. Perform d rounds of stabilizer measurement
+
+# 6. Perform a perfect logical unrotation (this is impossible on a real quantum computer, but works in a simulation). 
+
+# In the ideal case, this would bring us back to the logical |+> state. If we measure the logical |+>, we should obtain the result 0.
+# If we get a 1, we know that a logical error has occurred. This is a simple way to check for logical errors in a simulation.
+
+
+# ==========================================
+# QUBIT LÓGICO PRINCIPAL (Datos originales)
+# ==========================================
+QUBIT_COORDS(0.5, 0.5) 0
+QUBIT_COORDS(1.5, 0.5) 1
+QUBIT_COORDS(2.5, 0.5) 2
+QUBIT_COORDS(0.5, 1.5) 3
+QUBIT_COORDS(1.5, 1.5) 4
+QUBIT_COORDS(2.5, 1.5) 5
+QUBIT_COORDS(0.5, 2.5) 6
+QUBIT_COORDS(1.5, 2.5) 7
+QUBIT_COORDS(2.5, 2.5) 8
+QUBIT_COORDS(1, 0) 9
+QUBIT_COORDS(2, 1) 10
+QUBIT_COORDS(1, 2) 11
+QUBIT_COORDS(2, 3) 12
+QUBIT_COORDS(1, 1) 13
+QUBIT_COORDS(3, 1) 14
+QUBIT_COORDS(0, 2) 15
+QUBIT_COORDS(2, 2) 16
+
+# ==========================================
+# QUBIT LÓGICO AUXILIAR (Desplazado X + 10)
+# ==========================================
+QUBIT_COORDS(10.5, 0.5) 17
+QUBIT_COORDS(11.5, 0.5) 18
+QUBIT_COORDS(12.5, 0.5) 19
+QUBIT_COORDS(10.5, 1.5) 20
+QUBIT_COORDS(11.5, 1.5) 21
+QUBIT_COORDS(12.5, 1.5) 22
+QUBIT_COORDS(10.5, 2.5) 23
+QUBIT_COORDS(11.5, 2.5) 24
+QUBIT_COORDS(12.5, 2.5) 25
+QUBIT_COORDS(11, 0) 26
+QUBIT_COORDS(12, 1) 27
+QUBIT_COORDS(11, 2) 28
+QUBIT_COORDS(12, 3) 29
+QUBIT_COORDS(11, 1) 30
+QUBIT_COORDS(13, 1) 31
+QUBIT_COORDS(10, 2) 32
+QUBIT_COORDS(12, 2) 33
+
+# Inicializar Ancillas de medida (Principal)
+R 9 10 11 12
+# Inicializar Ancillas de medida (Auxiliar)
+R 26 27 28 29
+
+# Inicializar Datos (Principal)
+RX 0 1 2 3 4 5 6 7 8
+# Inicializar Datos (Auxiliar)
+RX 17 18 19 20 21 22 23 24 25
+
+TICK
+CX 1 10 3 11 7 12
+CX 18 27 20 28 24 29
+TICK
+CX 2 10 4 11 8 12
+CX 19 27 21 28 25 29
+TICK
+CX 0 9 4 10 6 11
+CX 17 26 21 27 23 28
+TICK
+CX 1 9 5 10 7 11
+CX 18 26 22 27 24 28
+TICK
+
+M 9 10 11 12
+M 26 27 28 29
+MX
+MX
+TICK
+CX 17 20 20 23
+R_Z(-0.1562269946295373) 23
+CX 20 23 17 20
+TICK
+CX 0 17 1 18 2 19 3 20 4 21 5 22 6 23 7 24 8 25
+TICK
+MPP Z17*Z18*Z19
+TICK
+OBSERVABLE_INCLUDE(1) rec[-1]
+TICK
+CX 0 3 3 6
+R_Z(0.1562269946295373) 6
+CX 3 6 0 3
+TICK
+MPP Z0*Z1*Z2
+TICK
+OBSERVABLE_INCLUDE(0) rec[-1]
+TICK
