@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantum Clifford+T Synthesizer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    :root {
+      --bg: #030812;
+      --panel: rgba(8, 14, 30, 0.84);
+      --border: rgba(110, 150, 230, 0.15);
+      --border-hi: rgba(110, 150, 230, 0.38);
+      --text: #e8f0ff;
+      --muted: #7a93c4;
+      --purple: #8b5cf6;
+      --cyan: #00e5ff;
+      --gold: #fbbf24;
+      --green: #4ade80;
+      --red: #fb7185;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      height: 100vh;
+      overflow: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 12% 12%, rgba(100, 55, 220, .22), transparent 34%),
+        radial-gradient(ellipse at 88% 18%, rgba(0, 175, 220, .14), transparent 30%),
+        radial-gradient(ellipse at 55% 88%, rgba(55, 220, 110, .07), transparent 28%),
+        var(--bg);
+    }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, .55);
+      overflow: hidden;
+    }
+
+    .sb-head {
+      padding: 20px 20px 15px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(139, 92, 246, .16), rgba(0, 229, 255, .06));
+      flex-shrink: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .04);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .dot-live {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 9px var(--green);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+    .sb-head h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.05em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #c4b5fd, #a5f3fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sb-head p {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .sb-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(110, 150, 230, .2) transparent;
+    }
+
+    .sec-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border-radius: 13px;
+      background: rgba(0, 0, 0, .28);
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 8px 2px;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 140ms, color 140ms;
+    }
+
+    .tab.on {
+      background: rgba(139, 92, 246, .28);
+      color: #c4b5fd;
+      box-shadow: inset 0 0 0 1px rgba(139, 92, 246, .45);
+    }
+
+    .angle-row {
+      display: grid;
+      grid-template-columns: 26px 1fr 74px;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .axis-tag { font-size: 13px; font-weight: 800; text-align: center; }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 4px;
+      background: rgba(110, 150, 230, .2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--purple);
+      box-shadow: 0 0 9px rgba(139, 92, 246, .7);
+      cursor: pointer;
+    }
+
+    input[type=number], select {
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .05);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 140ms, box-shadow 140ms;
+    }
+
+    input[type=number]:focus, select:focus {
+      border-color: rgba(139, 92, 246, .65);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, .13);
+    }
+
+    .num-sm { width: 74px; text-align: right; }
+    .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .opt-grid select { width: 100%; }
+
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .btn {
+      height: 38px;
+      border: none;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform 110ms, box-shadow 110ms, background 110ms, opacity 110ms;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: scale(.98); }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, .07);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover { background: rgba(255, 255, 255, .11); }
+
+    .btn-start {
+      grid-column: span 2;
+      height: 46px;
+      background: linear-gradient(135deg, #6d28d9, #0e7490);
+      color: #f0f9ff;
+      font-size: 14px;
+      box-shadow: 0 8px 28px rgba(109, 40, 217, .38);
+    }
+
+    .btn-start:hover { box-shadow: 0 12px 36px rgba(109, 40, 217, .55); }
+    .btn-start:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .mc {
+      padding: 11px 12px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--border);
+    }
+
+    .mc .lbl {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      margin-bottom: 3px;
+    }
+
+    .mc .val { font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
+
+    .seq-box {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, .22);
+      padding: 9px;
+      min-height: 72px;
+      max-height: 135px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(110, 150, 230, .2) transparent;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .chip {
+      padding: 5px 8px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, .07);
+      color: var(--muted);
+      transition: background 180ms, color 180ms, box-shadow 180ms;
+    }
+
+    .chip small {
+      display: block;
+      font-size: 8px;
+      font-weight: 800;
+      opacity: .8;
+      margin-top: 2px;
+    }
+
+    .chip.done { background: rgba(74, 222, 128, .08); color: var(--green); border-color: rgba(74, 222, 128, .25); }
+    .chip.active[data-g=h]   { background: #8b5cf6; color: #f8f4ff; box-shadow: 0 0 16px rgba(139, 92, 246, .75); }
+    .chip.active[data-g=s]   { background: #38bdf8; color: #001f30; box-shadow: 0 0 16px rgba(56, 189, 248, .75); }
+    .chip.active[data-g=sdg] { background: #818cf8; color: #0f0f2e; box-shadow: 0 0 16px rgba(129, 140, 248, .75); }
+    .chip.active[data-g=t]   { background: #fbbf24; color: #1c0a00; box-shadow: 0 0 16px rgba(251, 191, 36, .75); }
+    .chip.active[data-g=tdg] { background: #f97316; color: #1c0500; box-shadow: 0 0 16px rgba(249, 115, 22, .75); }
+    .chip.active[data-g=x]   { background: #f87171; color: #1a0000; box-shadow: 0 0 16px rgba(248, 113, 113, .75); }
+
+    .src-note {
+      padding: 9px 11px;
+      border-radius: 11px;
+      border: 1px dashed var(--border);
+      background: rgba(255, 255, 255, .02);
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .src-note b { color: #a5f3fc; }
+    .src-note.error b { color: var(--red); }
+
+    .euler-only { display: none; }
+    body[data-mode=euler] .euler-only { display: flex; }
+    body[data-mode=euler] .single-only { display: none; }
+
+    .stage {
+      position: relative;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: rgba(3, 8, 18, .65);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, .55);
+    }
+
+    #scene { width: 100%; height: 100%; display: block; }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .hud-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 18px; gap: 14px; }
+
+    .hud-info {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(3, 8, 18, .72);
+      backdrop-filter: blur(16px);
+      padding: 13px 16px;
+      max-width: 500px;
+    }
+
+    .hud-info h2 { font-size: 15px; font-weight: 800; letter-spacing: -.03em; margin-bottom: 3px; }
+    .hud-info p { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+    .gate-display {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(3, 8, 18, .72);
+      backdrop-filter: blur(16px);
+      padding: 11px 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 76px;
+    }
+
+    .gate-sym {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -.08em;
+      line-height: 1;
+      color: var(--cyan);
+      text-shadow: 0 0 22px rgba(0, 229, 255, .55);
+      transition: color .25s, text-shadow .25s;
+    }
+
+    .gate-ctr { font-size: 10px; color: var(--muted); font-weight: 700; margin-top: 3px; }
+    .hud-bottom { padding: 0 18px 18px; }
+    .prog-wrap { height: 3px; border-radius: 3px; background: rgba(110, 150, 230, .1); overflow: hidden; }
+
+    .prog-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      border-radius: 3px;
+      transition: width .35s ease;
+    }
+
+    .qr-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(3, 8, 18, .72);
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text);
+      transition: background 140ms, transform 110ms;
+      pointer-events: all;
+      z-index: 5;
+    }
+
+    .qr-btn:hover { background: rgba(139, 92, 246, .25); transform: scale(1.08); }
+
+    .qr-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(3, 8, 18, .82);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-modal.open { display: flex; }
+
+    .qr-box {
+      border-radius: 24px;
+      border: 1px solid var(--border-hi);
+      background: rgba(8, 14, 30, .96);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, .7);
+      max-width: 340px;
+      width: 90%;
+    }
+
+    .qr-box h3 { font-size: 18px; font-weight: 800; letter-spacing: -.03em; text-align: center; }
+    .qr-box p { color: var(--muted); font-size: 12px; text-align: center; line-height: 1.5; }
+    #qrCanvas { border-radius: 12px; overflow: hidden; background: #fff; padding: 12px; }
+    #qrCanvas canvas, #qrCanvas img { display: block; }
+
+    .qr-url {
+      font-size: 11px;
+      color: var(--muted);
+      word-break: break-all;
+      text-align: center;
+      font-family: ui-monospace, monospace;
+      background: rgba(255, 255, 255, .04);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: 100%;
+    }
+
+    .qr-actions { display: flex; gap: 10px; width: 100%; }
+    .qr-actions .btn { flex: 1; height: 38px; }
+
+    .legend {
+      position: absolute;
+      bottom: 18px;
+      right: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(3, 8, 18, .72);
+      backdrop-filter: blur(14px);
+      padding: 10px 13px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      pointer-events: none;
+    }
+
+    .leg-row { display: flex; align-items: center; gap: 7px; }
+
+    .leg-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    @media (max-width: 880px) {
+      body { overflow: auto; height: auto; }
+      .app { height: auto; min-height: 100vh; grid-template-columns: 1fr; }
+      .stage { height: 62vh; }
+    }
+  </style>
+</head>
+
+<body data-mode="single">
+<main class="app">
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="badge"><span class="dot-live"></span>Bloch Sphere Lab</div>
+      <h1>Clifford+T Synthesizer</h1>
+      <p>Qiskit gridsynth_rz decomposes Rx, Ry, Rz, and Euler rotations into Clifford+T gates, then the Bloch sphere animates every gate.</p>
+    </div>
+
+    <div class="sb-body">
+      <div>
+        <div class="sec-label">Rotation axis</div>
+        <div class="tabs">
+          <button class="tab on" data-axis="Z">Rz</button>
+          <button class="tab" data-axis="X">Rx</button>
+          <button class="tab" data-axis="Y">Ry</button>
+          <button class="tab" data-axis="EULER">Euler</button>
+        </div>
+      </div>
+
+      <div class="single-only" style="flex-direction:column; gap:9px">
+        <div class="sec-label" id="singleLbl">Rz angle (degrees)</div>
+        <div class="angle-row">
+          <span class="axis-tag" id="axisTag" style="color:#ffdd86">Z</span>
+          <input type="range" id="slider" min="-360" max="360" step=".5" value="37" />
+          <input type="number" class="num-sm" id="angleNum" value="37" min="-360" max="360" step=".5" />
+        </div>
+      </div>
+
+      <div class="euler-only" style="flex-direction:column; gap:9px">
+        <div class="sec-label">Euler angles (degrees)</div>
+        <div class="angle-row">
+          <span class="axis-tag" style="color:#86a6ff">X</span>
+          <input type="range" id="exS" min="-360" max="360" step=".5" value="22.5" />
+          <input type="number" class="num-sm" id="exN" value="22.5" min="-360" max="360" step=".5" />
+        </div>
+        <div class="angle-row">
+          <span class="axis-tag" style="color:#86ffda">Y</span>
+          <input type="range" id="eyS" min="-360" max="360" step=".5" value="37" />
+          <input type="number" class="num-sm" id="eyN" value="37" min="-360" max="360" step=".5" />
+        </div>
+        <div class="angle-row">
+          <span class="axis-tag" style="color:#ffdd86">Z</span>
+          <input type="range" id="ezS" min="-360" max="360" step=".5" value="-60" />
+          <input type="number" class="num-sm" id="ezN" value="-60" min="-360" max="360" step=".5" />
+        </div>
+        <div>
+          <div class="sec-label" style="margin-top:2px; margin-bottom:5px">Euler order</div>
+          <select id="orderSel" style="width:100%">
+            <option value="XYZ" selected>Rx → Ry → Rz</option>
+            <option value="XZY">Rx → Rz → Ry</option>
+            <option value="YXZ">Ry → Rx → Rz</option>
+            <option value="YZX">Ry → Rz → Rx</option>
+            <option value="ZXY">Rz → Rx → Ry</option>
+            <option value="ZYX">Rz → Ry → Rx</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-label">Options</div>
+        <div class="opt-grid">
+          <div>
+            <div class="sec-label" style="margin-bottom:5px">Precision ε</div>
+            <select id="epsSel">
+              <option value="1e-3">10⁻³</option>
+              <option value="1e-4" selected>10⁻⁴</option>
+              <option value="1e-6">10⁻⁶</option>
+              <option value="1e-8">10⁻⁸</option>
+              <option value="1e-10">10⁻¹⁰</option>
+              <option value="1e-12">10⁻¹²</option>
+            </select>
+          </div>
+          <div>
+            <div class="sec-label" style="margin-bottom:5px">Speed</div>
+            <select id="speedSel">
+              <option value=".35">0.35×</option>
+              <option value=".6">0.6×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.7">1.7×</option>
+              <option value="3">3×</option>
+              <option value="6">6×</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="btn-grid">
+          <button class="btn btn-ghost" id="randBtn">🎲 Random</button>
+          <button class="btn btn-ghost" id="resetBtn">↺ Reset</button>
+          <button class="btn btn-start" id="startBtn">▶ Synthesize + Animate</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-label">Metrics</div>
+        <div class="metrics">
+          <div class="mc"><div class="lbl">Sequence</div><div class="val" id="mLen">—</div></div>
+          <div class="mc"><div class="lbl">T-count</div><div class="val" id="mT">—</div></div>
+          <div class="mc"><div class="lbl">Distance</div><div class="val" style="font-size:13px" id="mDist">—</div></div>
+          <div class="mc"><div class="lbl">Fidelity</div><div class="val" style="font-size:15px" id="mFid">—</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-label">Synthesized sequence</div>
+        <div class="seq-box">
+          <div class="chips" id="chipsEl">
+            <span style="color:var(--muted); font-size:12px">Press Synthesize to generate a gate sequence.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="src-note" id="srcNote">
+        Source: <b>pending</b>. No browser fallback: the sequence must come from the Python backend using Qiskit gridsynth_rz.
+      </div>
+    </div>
+  </aside>
+
+  <section class="stage">
+    <canvas id="scene"></canvas>
+
+    <div class="hud">
+      <div class="hud-top">
+        <div class="hud-info">
+          <h2 id="hudTitle">Ready</h2>
+          <p id="hudDesc">The <span style="color:var(--cyan)">cyan arrow</span> is the synthesized state. The <span style="color:var(--gold)">gold arrow</span> is the exact target. The <span style="color:var(--green)">green trail</span> is the gate-by-gate path.</p>
+        </div>
+        <div class="gate-display">
+          <div class="gate-sym" id="gateSym">∅</div>
+          <div class="gate-ctr" id="gateCtr">—</div>
+        </div>
+      </div>
+      <div class="hud-bottom">
+        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+      </div>
+    </div>
+
+    <button class="qr-btn" id="qrBtn" title="Share QR code">📱</button>
+
+    <div class="legend">
+      <div class="leg-row"><span class="leg-dot" style="color:var(--cyan); background:var(--cyan)"></span>current state</div>
+      <div class="leg-row"><span class="leg-dot" style="color:var(--gold); background:var(--gold)"></span>exact target</div>
+      <div class="leg-row"><span class="leg-dot" style="color:var(--green); background:var(--green)"></span>trajectory trail</div>
+      <div class="leg-row"><span class="leg-dot" style="color:#a78bfa; background:#a78bfa"></span>H gate arc</div>
+      <div class="leg-row"><span class="leg-dot" style="color:#fbbf24; background:#fbbf24"></span>T gate arc</div>
+    </div>
+  </section>
+</main>
+
+<div class="qr-modal" id="qrModal">
+  <div class="qr-box">
+    <h3>📱 Scan to open</h3>
+    <p>This QR points to the current URL. With Cloudflare Tunnel, it works from outside your local network too.</p>
+    <div id="qrCanvas"></div>
+    <div class="qr-url" id="qrUrl"></div>
+    <div class="qr-actions">
+      <button class="btn btn-ghost" id="copyUrlBtn">Copy URL</button>
+      <button class="btn btn-ghost" id="closeQrBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+if (!window.THREE || !THREE.OrbitControls) {
+  alert("Three.js did not load. Check your internet connection or CDN access.");
+}
+
+// Complex number helpers.
+const C = (re, im = 0) => ({ re, im });
+const add = (a, b) => C(a.re + b.re, a.im + b.im);
+const mul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const conj = (a) => C(a.re, -a.im);
+const abs2 = (a) => a.re * a.re + a.im * a.im;
+const cabs = (a) => Math.hypot(a.re, a.im);
+const expi = (p) => C(Math.cos(p), Math.sin(p));
+const ZERO = C(0, 0);
+const ONE = C(1, 0);
+const IS2 = 1 / Math.sqrt(2);
+const cloneC = (z) => C(z.re, z.im);
+const cloneM = (M) => M.map((row) => row.map(cloneC));
+
+function mm(A, B) {
+  return [
+    [add(mul(A[0][0], B[0][0]), mul(A[0][1], B[1][0])), add(mul(A[0][0], B[0][1]), mul(A[0][1], B[1][1]))],
+    [add(mul(A[1][0], B[0][0]), mul(A[1][1], B[1][0])), add(mul(A[1][0], B[0][1]), mul(A[1][1], B[1][1]))],
+  ];
+}
+
+function mv(A, v) {
+  return [
+    add(mul(A[0][0], v[0]), mul(A[0][1], v[1])),
+    add(mul(A[1][0], v[0]), mul(A[1][1], v[1])),
+  ];
+}
+
+const dag = (A) => [[conj(A[0][0]), conj(A[1][0])], [conj(A[0][1]), conj(A[1][1])]];
+const tr = (A) => add(A[0][0], A[1][1]);
+const inn = (v, w) => add(mul(conj(v[0]), w[0]), mul(conj(v[1]), w[1]));
+const norm = (v) => {
+  const n = Math.sqrt(abs2(v[0]) + abs2(v[1]));
+  return [C(v[0].re / n, v[0].im / n), C(v[1].re / n, v[1].im / n)];
+};
+
+const I2 = [[ONE, ZERO], [ZERO, ONE]];
+const Rz = (t) => [[expi(-t / 2), ZERO], [ZERO, expi(t / 2)]];
+const Rx = (t) => [[C(Math.cos(t / 2)), C(0, -Math.sin(t / 2))], [C(0, -Math.sin(t / 2)), C(Math.cos(t / 2))]];
+const Ry = (t) => [[C(Math.cos(t / 2)), C(-Math.sin(t / 2))], [C(Math.sin(t / 2)), C(Math.cos(t / 2))]];
+
+function udist(U, V) {
+  const value = Math.min(1, cabs(tr(mm(dag(U), V))) / 2);
+  return Math.sqrt(Math.max(0, 1 - value));
+}
+
+const sfid = (a, b) => Math.min(1, abs2(inn(a, b)));
+
+function bloch(psi) {
+  const a = psi[0];
+  const b = psi[1];
+  const ab = mul(conj(a), b);
+  return new THREE.Vector3(2 * ab.re, 2 * ab.im, abs2(a) - abs2(b));
+}
+
+const GATES = {
+  h: {
+    lbl: "H", hex: "#a78bfa", col: 0xa78bfa, axis: new THREE.Vector3(1, 0, 1).normalize(),
+    mat: [[C(IS2), C(IS2)], [C(IS2), C(-IS2)]],
+    desc: "Hadamard — Clifford π rotation about (X+Z)/√2.",
+  },
+  s: {
+    lbl: "S", hex: "#38bdf8", col: 0x38bdf8, axis: new THREE.Vector3(0, 0, 1),
+    mat: [[ONE, ZERO], [ZERO, C(0, 1)]],
+    desc: "S — Clifford π/2 rotation about Z.",
+  },
+  sdg: {
+    lbl: "S†", hex: "#818cf8", col: 0x818cf8, axis: new THREE.Vector3(0, 0, 1),
+    mat: [[ONE, ZERO], [ZERO, C(0, -1)]],
+    desc: "S† — Clifford −π/2 rotation about Z.",
+  },
+  t: {
+    lbl: "T", hex: "#fbbf24", col: 0xfbbf24, axis: new THREE.Vector3(0, 0, 1),
+    mat: [[ONE, ZERO], [ZERO, expi(Math.PI / 4)]],
+    desc: "T — non-Clifford π/4 rotation about Z.",
+  },
+  tdg: {
+    lbl: "T†", hex: "#f97316", col: 0xf97316, axis: new THREE.Vector3(0, 0, 1),
+    mat: [[ONE, ZERO], [ZERO, expi(-Math.PI / 4)]],
+    desc: "T† — non-Clifford −π/4 rotation about Z.",
+  },
+  x: {
+    lbl: "X", hex: "#f87171", col: 0xf87171, axis: new THREE.Vector3(1, 0, 0),
+    mat: [[ZERO, ONE], [ONE, ZERO]],
+    desc: "Pauli X — Clifford π rotation about X.",
+  },
+};
+
+const INIT = norm([ONE, ONE]);
+let curAxis = "Z";
+let animTok = 0;
+let curSeq = [];
+let curGateObjects = [];
+
+// Three.js scene.
+const canvas = document.getElementById("scene");
+const scene = new THREE.Scene();
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const camera = new THREE.PerspectiveCamera(44, 1, .1, 100);
+camera.position.set(3.2, 2.1, 3.4);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = .07;
+
+scene.add(new THREE.AmbientLight(0x7090c0, .75));
+const dL = new THREE.DirectionalLight(0xffffff, 1.4);
+dL.position.set(3, 4, 3);
+scene.add(dL);
+const rL = new THREE.DirectionalLight(0x4070ff, .45);
+rL.position.set(-3, -1, -2);
+scene.add(rL);
+
+const root = new THREE.Group();
+scene.add(root);
+
+root.add(new THREE.Mesh(
+  new THREE.SphereGeometry(1, 64, 64),
+  new THREE.MeshPhysicalMaterial({ color: 0x1a2b5c, transparent: true, opacity: .38, roughness: .3, metalness: .1, clearcoat: 1 })
+));
+
+function greatCircle(normal, col, op) {
+  const pts = [];
+  for (let i = 0; i <= 200; i++) {
+    const t = (i / 200) * 2 * Math.PI;
+    pts.push(new THREE.Vector3(Math.cos(t), Math.sin(t), 0));
+  }
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op }));
+  const def = new THREE.Vector3(0, 0, 1);
+  const ax = normal.clone().normalize();
+  if (Math.abs(ax.dot(def)) < .9999) line.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(def, ax));
+  root.add(line);
+}
+
+greatCircle(new THREE.Vector3(0, 0, 1), 0x4060a0, .38);
+greatCircle(new THREE.Vector3(0, 1, 0), 0x4060a0, .24);
+greatCircle(new THREE.Vector3(1, 0, 0), 0x4060a0, .24);
+
+function makeLabel(text, col) {
+  const c = document.createElement("canvas");
+  c.width = 128;
+  c.height = 64;
+  const ctx = c.getContext("2d");
+  ctx.font = "bold 40px Inter,Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = col;
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 14;
+  ctx.fillText(text, 64, 32);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+  sp.scale.set(.24, .12, 1);
+  return sp;
+}
+
+function addAxis(dir, col, lbl) {
+  root.add(new THREE.ArrowHelper(dir.clone().normalize(), new THREE.Vector3(), 1.3, col, .07, .04));
+  const s = makeLabel(lbl, "#" + col.toString(16).padStart(6, "0"));
+  s.position.copy(dir.clone().multiplyScalar(1.52));
+  root.add(s);
+}
+
+addAxis(new THREE.Vector3(1, 0, 0), 0x86a6ff, "|+⟩");
+addAxis(new THREE.Vector3(0, 1, 0), 0x86ffda, "|+i⟩");
+addAxis(new THREE.Vector3(0, 0, 1), 0xffdd86, "|0⟩");
+const s1 = makeLabel("|1⟩", "#ff9966");
+s1.position.set(0, 0, -1.62);
+s1.scale.set(.2, .1, 1);
+root.add(s1);
+const sm = makeLabel("|−⟩", "#6080cc");
+sm.position.set(-1.52, 0, 0);
+sm.scale.set(.24, .12, 1);
+root.add(sm);
+
+const stArr = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1.1, 0x00e5ff, .14, .08);
+root.add(stArr);
+const tgArr = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1.06, 0xffd166, .11, .06);
+tgArr.visible = false;
+root.add(tgArr);
+
+const trailMat = new THREE.LineBasicMaterial({ color: 0x4ade80, transparent: true, opacity: .78 });
+let trailPts = [bloch(INIT), bloch(INIT)];
+const trailLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(trailPts), trailMat);
+root.add(trailLine);
+
+const arcMat = new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: .88 });
+const arcLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), arcMat);
+arcLine.visible = false;
+root.add(arcLine);
+
+const ringMat = new THREE.MeshPhongMaterial({ color: 0x00e5ff, transparent: true, opacity: 0, emissive: 0x00e5ff, emissiveIntensity: .5 });
+const ring = new THREE.Mesh(new THREE.TorusGeometry(1.065, .007, 8, 128), ringMat);
+ring.visible = false;
+root.add(ring);
+
+function makeGlowTex() {
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 64;
+  const ctx = c.getContext("2d");
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(.35, "rgba(0,229,255,.7)");
+  g.addColorStop(1, "rgba(0,229,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+
+const glowMat = new THREE.SpriteMaterial({ map: makeGlowTex(), transparent: true, opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false });
+const glow = new THREE.Sprite(glowMat);
+glow.scale.set(.26, .26, 1);
+glow.position.set(1.1, 0, 0);
+root.add(glow);
+
+(function addStars() {
+  const pos = [];
+  for (let i = 0; i < 650; i++) {
+    const r = 5 + Math.random() * 5;
+    const t = Math.random() * 2 * Math.PI;
+    const p = Math.acos(2 * Math.random() - 1);
+    pos.push(r * Math.sin(p) * Math.cos(t), r * Math.sin(p) * Math.sin(t), r * Math.cos(p));
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xb9c7ff, size: .013, transparent: true, opacity: .52 })));
+})();
+
+function resize() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / r.height;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize);
+resize();
+
+function setDir(arrow, v) {
+  const vn = v.clone();
+  if (vn.length() < 1e-9) vn.set(1, 0, 0);
+  arrow.setDirection(vn.normalize());
+}
+
+function setCol(arrow, col) {
+  arrow.line.material.color.setHex(col);
+  arrow.cone.material.color.setHex(col);
+}
+
+function slerp(a, b, t) {
+  const v = a.clone().lerp(b, t);
+  if (v.length() < 1e-9) return b.clone().normalize();
+  return v.normalize();
+}
+
+function showArc(from, to, col) {
+  const pts = [];
+  for (let i = 0; i <= 72; i++) pts.push(slerp(from, to, i / 72).multiplyScalar(1.014));
+  arcLine.geometry.dispose();
+  arcLine.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+  arcMat.color.setHex(col);
+  arcLine.visible = true;
+}
+
+function showRing(axis, col) {
+  const def = new THREE.Vector3(0, 0, 1);
+  const ax = axis.clone().normalize();
+  if (Math.abs(ax.dot(def)) < .9999) ring.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(def, ax));
+  else ring.setRotationFromEuler(new THREE.Euler());
+  ringMat.color.setHex(col);
+  ringMat.emissive.setHex(col);
+  ringMat.opacity = .55;
+  ring.visible = true;
+}
+
+function hideExtras() {
+  arcLine.visible = false;
+  ring.visible = false;
+  ringMat.opacity = 0;
+}
+
+function setTrail(pts) {
+  trailLine.geometry.dispose();
+  trailLine.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+}
+
+function setGlow(pos, col) {
+  glow.position.copy(pos.clone().multiplyScalar(1.1));
+  glowMat.color.setHex(col);
+}
+
+const $ = (id) => document.getElementById(id);
+const slider = $("slider");
+const angleNum = $("angleNum");
+const exS = $("exS");
+const exN = $("exN");
+const eyS = $("eyS");
+const eyN = $("eyN");
+const ezS = $("ezS");
+const ezN = $("ezN");
+const orderSel = $("orderSel");
+const epsSel = $("epsSel");
+const speedSel = $("speedSel");
+const startBtn = $("startBtn");
+const randBtn = $("randBtn");
+const resetBtn = $("resetBtn");
+const chipsEl = $("chipsEl");
+const mLen = $("mLen");
+const mT = $("mT");
+const mDist = $("mDist");
+const mFid = $("mFid");
+const hudTitle = $("hudTitle");
+const hudDesc = $("hudDesc");
+const gateSym = $("gateSym");
+const gateCtr = $("gateCtr");
+const progFill = $("progFill");
+const srcNote = $("srcNote");
+const singleLbl = $("singleLbl");
+const axisTag = $("axisTag");
+
+function sync(sliderEl, numberEl) {
+  sliderEl.addEventListener("input", () => { numberEl.value = sliderEl.value; });
+  numberEl.addEventListener("input", () => {
+    const value = Number(numberEl.value);
+    sliderEl.value = Math.max(Number(sliderEl.min), Math.min(Number(sliderEl.max), value));
+  });
+}
+
+sync(slider, angleNum);
+sync(exS, exN);
+sync(eyS, eyN);
+sync(ezS, ezN);
+
+const axisColors = { X: "#86a6ff", Y: "#86ffda", Z: "#ffdd86" };
+
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("on"));
+    tab.classList.add("on");
+    curAxis = tab.dataset.axis;
+    document.body.dataset.mode = curAxis === "EULER" ? "euler" : "single";
+    if (curAxis !== "EULER") {
+      axisTag.textContent = curAxis;
+      axisTag.style.color = axisColors[curAxis];
+      singleLbl.textContent = `R${curAxis.toLowerCase()} angle (degrees)`;
+    }
+    reset();
+  });
+});
+
+function renderChips(gateObjects) {
+  chipsEl.innerHTML = "";
+  if (!gateObjects.length) {
+    chipsEl.innerHTML = `<span class="chip">I <small>none</small></span>`;
+    return;
+  }
+  gateObjects.forEach((entry, index) => {
+    const el = document.createElement("span");
+    el.className = "chip";
+    el.dataset.g = entry.gate;
+    el.dataset.i = String(index);
+    el.textContent = GATES[entry.gate].lbl;
+    const small = document.createElement("small");
+    small.textContent = entry.axis || "?";
+    el.appendChild(small);
+    chipsEl.appendChild(el);
+  });
+}
+
+function markChip(idx) {
+  [...chipsEl.children].forEach((el) => {
+    const i = Number(el.dataset.i);
+    el.classList.toggle("active", i === idx);
+    el.classList.toggle("done", Number.isFinite(i) && i < idx);
+  });
+  if (idx >= 0 && chipsEl.children[idx]) chipsEl.children[idx].scrollIntoView({ block: "nearest" });
+  progFill.style.width = curSeq.length ? `${Math.max(0, idx) / curSeq.length * 100}%` : "0%";
+}
+
+function setHUD(sym, col, ctr, title, desc) {
+  gateSym.textContent = sym;
+  gateSym.style.color = col || "var(--cyan)";
+  gateSym.style.textShadow = `0 0 26px ${col || "rgba(0,229,255,.55)"}99`;
+  gateCtr.textContent = ctr || "—";
+  if (title) hudTitle.textContent = title;
+  if (desc) hudDesc.textContent = desc;
+}
+
+function selectedOrder() {
+  return curAxis === "EULER" ? orderSel.value : curAxis;
+}
+
+function getAnglesDeg() {
+  if (curAxis === "EULER") {
+    return { x: Number(exN.value) || 0, y: Number(eyN.value) || 0, z: Number(ezN.value) || 0 };
+  }
+  return {
+    x: curAxis === "X" ? Number(angleNum.value) || 0 : 0,
+    y: curAxis === "Y" ? Number(angleNum.value) || 0 : 0,
+    z: curAxis === "Z" ? Number(angleNum.value) || 0 : 0,
+  };
+}
+
+function rotationForAxis(axis, angleRad) {
+  if (axis === "X") return Rx(angleRad);
+  if (axis === "Y") return Ry(angleRad);
+  return Rz(angleRad);
+}
+
+function exactUnitaryFromInput() {
+  const deg = getAnglesDeg();
+  const rad = { X: deg.x * Math.PI / 180, Y: deg.y * Math.PI / 180, Z: deg.z * Math.PI / 180 };
+  let U = cloneM(I2);
+  for (const axis of selectedOrder()) U = mm(rotationForAxis(axis, rad[axis]), U);
+  return U;
+}
+
+function targetFromInput() {
+  const U = exactUnitaryFromInput();
+  const psi = norm(mv(U, INIT));
+  return { U, psi, vec: bloch(psi) };
+}
+
+function sequenceUnitary(seq) {
+  let U = cloneM(I2);
+  for (const gate of seq) U = mm(GATES[gate].mat, U);
+  return U;
+}
+
+function statesFromSequence(seq) {
+  let psi = INIT;
+  const states = [psi];
+  const vecs = [bloch(psi)];
+  for (const gate of seq) {
+    psi = norm(mv(GATES[gate].mat, psi));
+    states.push(psi);
+    vecs.push(bloch(psi));
+  }
+  return { states, vecs, finalPsi: psi };
+}
+
+async function synthesizeFromBackend() {
+  const payload = {
+    angles_deg: getAnglesDeg(),
+    order: selectedOrder(),
+    epsilon: Number(epsSel.value),
+  };
+
+  const resp = await fetch("/api/synthesize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+  return data;
+}
+
+function reset() {
+  animTok++;
+  hideExtras();
+  const iv = bloch(INIT);
+  setDir(stArr, iv);
+  setCol(stArr, 0x00e5ff);
+  tgArr.visible = false;
+  setGlow(iv, 0x00e5ff);
+  trailPts = [iv, iv];
+  setTrail(trailPts);
+  curSeq = [];
+  curGateObjects = [];
+  setHUD("∅", "var(--cyan)", "—", "Ready", "Choose an axis or Euler angles, then press Synthesize. No browser fallback is used.");
+  markChip(-1);
+  progFill.style.width = "0%";
+}
+
+function tween(ms, fn) {
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    function step(now) {
+      const u = Math.min(1, (now - t0) / ms);
+      fn(u);
+      if (u < 1) requestAnimationFrame(step);
+      else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+async function animSeq(tok, gateObjects, vecs) {
+  const trail = [vecs[0]];
+  setDir(stArr, vecs[0]);
+  setTrail([vecs[0], vecs[0]]);
+
+  if (!gateObjects.length) {
+    setHUD("I", "var(--muted)", "0/0", "Identity", "The backend returned an empty circuit for this rotation.");
+    return;
+  }
+
+  for (let i = 0; i < gateObjects.length; i++) {
+    if (tok !== animTok) return;
+    const entry = gateObjects[i];
+    const info = GATES[entry.gate];
+    const from = vecs[i];
+    const to = vecs[i + 1];
+    const ms = 720 / Number(speedSel.value);
+
+    markChip(i);
+    setHUD(info.lbl, info.hex, `${i + 1}/${gateObjects.length}`, `Gate ${i + 1}/${gateObjects.length}: ${info.lbl} (${entry.axis})`, `${info.desc} Source: ${entry.source}.`);
+    setCol(stArr, info.col);
+    glowMat.color.setHex(info.col);
+    showArc(from, to, info.col);
+    showRing(info.axis, info.col);
+
+    await tween(ms, (u) => {
+      const e = u * u * (3 - 2 * u);
+      const v = slerp(from, to, e);
+      setDir(stArr, v);
+      setGlow(v, info.col);
+      setTrail([...trail, v]);
+    });
+
+    trail.push(to);
+    setTrail(trail);
+    hideExtras();
+  }
+
+  if (tok !== animTok) return;
+  markChip(gateObjects.length);
+  progFill.style.width = "100%";
+  setHUD("✓", "var(--green)", `${gateObjects.length}/${gateObjects.length}`, "Done", "Animation complete. Cyan is the synthesized Clifford+T circuit, gold is the exact target.");
+  setCol(stArr, 0x00e5ff);
+  glowMat.color.setHex(0x00e5ff);
+}
+
+async function start() {
+  startBtn.disabled = true;
+  reset();
+  const tok = animTok;
+
+  const target = targetFromInput();
+  setDir(tgArr, target.vec);
+  tgArr.visible = true;
+
+  srcNote.classList.remove("error");
+  srcNote.innerHTML = `Source: <b>calling Qiskit gridsynth_rz...</b>`;
+  setHUD("⟳", "var(--muted)", "…", "Synthesizing with Python", "The backend is running Qiskit gridsynth_rz. Lower ε can take longer and should usually produce more gates for generic angles.");
+
+  try {
+    const data = await synthesizeFromBackend();
+    if (tok !== animTok) return;
+
+    curSeq = data.flat_sequence || [];
+    curGateObjects = (data.gates || []).map((entry) => ({
+      gate: String(entry.gate).toLowerCase(),
+      axis: entry.axis || "?",
+      source: entry.source || "gridsynth_rz",
+    }));
+
+    const unsupported = curSeq.filter((gate) => !GATES[gate]);
+    if (unsupported.length) throw new Error(`Unsupported gates from backend: ${unsupported.join(", ")}`);
+
+    renderChips(curGateObjects);
+    const { vecs, finalPsi } = statesFromSequence(curSeq);
+    const seqU = sequenceUnitary(curSeq);
+    const tCount = curSeq.filter((gate) => gate === "t" || gate === "tdg").length;
+
+    mLen.textContent = curSeq.length;
+    mT.textContent = tCount;
+    mDist.textContent = udist(seqU, target.U).toExponential(2);
+    mFid.textContent = sfid(target.psi, finalPsi).toFixed(6);
+
+    const byAxis = data.meta && data.meta.by_axis ? JSON.stringify(data.meta.by_axis) : "{}";
+    srcNote.innerHTML = `Source: <b>${data.meta?.mode || "qiskit.synthesis.gridsynth_rz"}</b>, ε=${data.meta?.epsilon ?? epsSel.value}, order=${data.meta?.order ?? selectedOrder()}<br>Axis breakdown: ${byAxis}`;
+
+    hudTitle.textContent = `Sequence: ${curSeq.length} gates`;
+    hudDesc.textContent = `T-count: ${tCount}. This is the real backend sequence, with Rx/Ry implemented through Clifford wrappers around gridsynth_rz.`;
+
+    await animSeq(tok, curGateObjects, vecs);
+  } catch (error) {
+    console.error(error);
+    srcNote.classList.add("error");
+    srcNote.innerHTML = `Source: <b>backend error</b><br>${error.message}`;
+    setHUD("!", "var(--red)", "error", "Backend error", error.message);
+  } finally {
+    startBtn.disabled = false;
+  }
+}
+
+startBtn.addEventListener("click", start);
+resetBtn.addEventListener("click", () => { reset(); startBtn.disabled = false; });
+
+randBtn.addEventListener("click", () => {
+  const v = () => Math.round((Math.random() * 720 - 360) * 2) / 2;
+  if (curAxis === "EULER") {
+    const ex = v();
+    const ey = v();
+    const ez = v();
+    exN.value = ex; exS.value = ex;
+    eyN.value = ey; eyS.value = ey;
+    ezN.value = ez; ezS.value = ez;
+  } else {
+    const value = v();
+    angleNum.value = value;
+    slider.value = value;
+  }
+  reset();
+});
+
+orderSel.addEventListener("change", reset);
+epsSel.addEventListener("change", () => {
+  srcNote.innerHTML = `Source: <b>pending</b>. Precision changed to ε=${epsSel.value}. Press Synthesize again.`;
+});
+
+const qrModal = $("qrModal");
+const qrCanvas = $("qrCanvas");
+const qrUrl = $("qrUrl");
+let qrGeneratedFor = null;
+
+$("qrBtn").addEventListener("click", () => {
+  const url = window.location.href;
+  qrUrl.textContent = url;
+  if (qrGeneratedFor !== url) {
+    qrCanvas.innerHTML = "";
+    new QRCode(qrCanvas, { text: url, width: 220, height: 220, colorDark: "#1a2b5c", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    qrGeneratedFor = url;
+  }
+  qrModal.classList.add("open");
+});
+
+$("closeQrBtn").addEventListener("click", () => qrModal.classList.remove("open"));
+qrModal.addEventListener("click", (event) => { if (event.target === qrModal) qrModal.classList.remove("open"); });
+$("copyUrlBtn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    $("copyUrlBtn").textContent = "Copied!";
+    setTimeout(() => $("copyUrlBtn").textContent = "Copy URL", 1600);
+  } catch {
+    $("copyUrlBtn").textContent = "Copy failed";
+  }
+});
+
+let autoRot = true;
+controls.addEventListener("start", () => autoRot = false);
+controls.addEventListener("end", () => setTimeout(() => autoRot = true, 2000));
+
+function loop() {
+  controls.update();
+  if (autoRot) root.rotation.y += .00055;
+  if (ring.visible) {
+    ring.rotation.z += .018;
+    ringMat.opacity = .42 + .2 * Math.sin(performance.now() * .003);
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+reset();
+renderChips(curGateObjects);
+loop();
+</script>
+</body>
+</html>

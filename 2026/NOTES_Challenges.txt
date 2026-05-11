@@ -1,0 +1,73 @@
+qc.ethz.ch
+
+QuEra:
+- 1 qubit gates
+- Tsim
+
+IQM: 
+- Use of IQM Resonance
+- Qrisp: q.variables, auto uncompute, modularity, arithmetics, compatibility? Support for IQM
+- Lot of focus on entanglement, ent. measure, ent. observation
+- 
+
+Alice & Bob:
+- Low-Overhead Fault Tolerant QC with Cat Qubits
+- QEC on cat qubits (heavily biased error)
+- Bosonic qubits (infinite dimensional qubit = Fock states = Cat qubits)
+- Challenge = design/use good classical EC code to use on Cat qubits?
+
+Zurich instruments:
+- QC control system
+- Simulation (?) of the control of a QC
+- Digital twin of a QC (control system?NO? or full (YES) )
+- Goal: characterize qubit parameters as fast as possible, write control code
+- Stretch: bell-inequality test, fast readout, spectroscopy
+- Tools available to start from, backend simulator exists
+
+
+####################################################################################
+QuEra
+
+2 subteams Synthesis & STAR
+
+Synth:
+- programming based 
+- Synth gates (translate log. gate into physical sequence of gates, with restrictions)
+- explore tools
+- inject non clifford (magic states)
+- implement logical qubits ()
+- Necessary in any case for FTQC
+
+STAR:
+- explore new tools (different?)
+- Analyse circuits
+- Design protocols
+- STAR architecture research
+    - Efficient small angle rotations
+    - STAR = technique that is between NISQ and FTQC
+    - STAR = Mega QuOp regime
+
+SQUIN:
+- Kernels with measurements, return measurements results as array
+- Kernels @squin.kernel return register to be used as subroutine
+- Can use measure results in ifs to classically control gates
+
+TSim:
+- Logical qubits use too much memory in sample sims (pyQrack uses statevector)
+- TSim uses another data structure (stabilizer states) 
+- TSim can take QASM (modified) or Squin kernels
+- 
+
+
+
+
+
+---------------
+
+
+Challenge
+
+computing of slopes is done with epsilon [3,15] and n [3,11]:
+
+Media slope T-count  (n>=3): 3.0460
+Media slope Clifford (n>=3): 4.5659
