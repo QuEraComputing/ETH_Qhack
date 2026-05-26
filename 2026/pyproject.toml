@@ -8,4 +8,6 @@ dependencies = [
     "bloqade>=0.32.0",
     "bloqade-circuit[tsim]>=0.11.2",
     "jupyterlab>=4.5.3",
+    "qiskit>=2.3.0",
+    "flask"
 ]
