@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "amazon-braket-sdk"
-version = "1.114.0"
+version = "1.117.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "amazon-braket-default-simulator" },
@@ -58,9 +58,9 @@ dependencies = [
     { name = "oqpy" },
     { name = "sympy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/92/f4/0cf29e61aeab6d39511d2025759e2d8832096985651390f5cf559dfab818/amazon_braket_sdk-1.114.0.tar.gz", hash = "sha256:f19e278166f08ad6324d736051af9fc68435d035e26c5d37ac4942886ff2a8ad", size = 497687, upload-time = "2026-03-23T16:16:41.1Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/3b/4d2f3565b703202a8acad9494774819cf7cd3e2b0c13711b54ee3fb68ad1/amazon_braket_sdk-1.117.0.tar.gz", hash = "sha256:ba37873556b6bc6865caebe8815b77635d8b75954981347cffbb81586751ac03", size = 499560, upload-time = "2026-04-24T22:55:14.109Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/96/f2e3aaa78d86bc3e7b3b38364497f14253461568f3b800141d0cdab1d494/amazon_braket_sdk-1.114.0-py3-none-any.whl", hash = "sha256:f2690d38742acec46d7d8d50c9f42e79d2957f8ec8ceb001ecaa8911b48011ad", size = 386463, upload-time = "2026-03-23T16:16:39.511Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/2a/5500e57eb17754a29184d630fc7ea684c223847b19fd71aa25833f08c1eb/amazon_braket_sdk-1.117.0-py3-none-any.whl", hash = "sha256:5cd2f29c71cbe7729ccc14538851a08337c6bf26c7c860cf49270cb069815772", size = 387620, upload-time = "2026-04-24T22:55:11.893Z" },
 ]
 
 [[package]]
@@ -699,6 +699,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8c/b3/ab523b630e55f7038360f962c17b4a3a438850796d7f64f1e3c6e188775f/equinox-0.13.6.tar.gz", hash = "sha256:27529bb24fde117a0e976fca8027642eb1c8559e9445fb8d527792f64c74855a", size = 141923, upload-time = "2026-03-09T19:03:39.12Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4f/e9/3759a02b0307fdbbb201d8a2b00e192a24cac86b1db9bd3bfa1cbbb9decc/equinox-0.13.6-py3-none-any.whl", hash = "sha256:e01f6bee9d2fb9a1a51d8b34af3b70476a4727097b46b1115f36432b2488f4a0", size = 182056, upload-time = "2026-03-09T19:03:37.742Z" },
+]
+
+[[package]]
+name = "eth-quantum-hackathon-2026-challenge"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "bloqade" },
+    { name = "bloqade-circuit", extra = ["tsim"] },
+    { name = "jupyterlab" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "bloqade", specifier = ">=0.32.0" },
+    { name = "bloqade-circuit", extras = ["tsim"], specifier = ">=0.11.2" },
+    { name = "jupyterlab", specifier = ">=4.5.3" },
 ]
 
 [[package]]
@@ -2698,21 +2715,4 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f6/08/3cb9f67a8d48021aca2a02292cc26eecd71d949ae70ad66420a8730cc302/xyzservices-2026.3.0.tar.gz", hash = "sha256:d226866a5d8e9fef337034d8da37a8298f0a1d9d1489b4018e69579eb321fea4", size = 1135736, upload-time = "2026-03-30T14:42:25.596Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a8/a9/d23012099dc88ec69a29c6407b41d89681cb674c2043cd5b467c7e299c08/xyzservices-2026.3.0-py3-none-any.whl", hash = "sha256:503183d4b322bfebc3c50cdd21192aa3e81e36c5efbf9133d54ae82143e0576b", size = 94101, upload-time = "2026-03-30T14:42:24.608Z" },
-]
-
-[[package]]
-name = "eth-quantum-hackathon-2026-challenge"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "bloqade" },
-    { name = "bloqade-circuit", extra = ["tsim"] },
-    { name = "jupyterlab" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "bloqade", specifier = ">=0.32.0" },
-    { name = "bloqade-circuit", extras = ["tsim"], specifier = ">=0.11.2" },
-    { name = "jupyterlab", specifier = ">=4.5.3" },
 ]
