@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.12.*"
 resolution-markers = [
     "sys_platform == 'darwin'",
@@ -744,11 +744,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/f0/cc/3b7408b8ecf7c1d20
 
 [[package]]
 name = "filelock"
-version = "3.25.2"
+version = "4.2.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/94/b8/00651a0f559862f3bb7d6f7477b192afe3f583cc5e26403b44e59a55ab34/filelock-3.25.2.tar.gz", hash = "sha256:b64ece2b38f4ca29dd3e810287aa8c48182bbecd1ae6e9ae126c9b35f1382694", size = 40480, upload-time = "2026-03-11T20:45:38.487Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d5/98/771d8ca889f220d7d7e352addf500666368f0fd081c6080a83767580c6e4/filelock-4.2.1.tar.gz", hash = "sha256:c4c937ccac2a813cee448e662a56366cfb374c0f8702e75f295c412cc1c5d5a3", size = 650997, upload-time = "2026-10-17T16:48:14.435Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/a5/842ae8f0c08b61d6484b52f99a03510a3a72d23141942d216ebe81fefbce/filelock-3.25.2-py3-none-any.whl", hash = "sha256:ca8afb0da15f229774c9ad1b455ed96e85a81373065fb10446672f64444ddf70", size = 26759, upload-time = "2026-03-11T20:45:37.437Z" },
+    { url = "https://files.pythonhosted.org/packages/28/00/db89d339bc4ecdc8087fa7b8607ba22ffc27bf96286f340c9620bea428b3/filelock-4.2.1-py3-none-any.whl", hash = "sha256:7be2662e9e826b9bba28afc0f843a123280d799a2ea44bb5d35ccec67905ae44", size = 162455, upload-time = "2026-10-17T16:48:12.937Z" },
 ]
 
 [[package]]
@@ -1066,7 +1066,7 @@ wheels = [
 
 [[package]]
 name = "juliapkg"
-version = "0.1.23"
+version = "0.1.28"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
@@ -1074,9 +1074,9 @@ dependencies = [
     { name = "tomli" },
     { name = "tomlkit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/c9/827f4575c3bed01255ed646bb4dc4cade483a6710d7869d2fadb2f549c59/juliapkg-0.1.23.tar.gz", hash = "sha256:b61cc55a9d6c99643b22915920c614cfd28e70ca1dadf72f7ee2327d36e66477", size = 23434, upload-time = "2026-02-16T11:34:35.758Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/b1/965f7b066df488d7328fb448cf09b5647d2958266742e8e124239135c9fb/juliapkg-0.1.28.tar.gz", hash = "sha256:24f3ca545263e090f57521f47900bbb94ee7ebc9d91c55c82e4148aaf1b58e36", size = 27403, upload-time = "2026-10-24T21:24:35.341Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/9d/1f4495bf047e61e904a69242941aca04ad3c7453639d9019c5d8facb3862/juliapkg-0.1.23-py3-none-any.whl", hash = "sha256:195eb0986d83c7e4df7781290d1158e5dd8809dada634ff2e8196ea16608f1a0", size = 21890, upload-time = "2026-02-16T11:34:34.481Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/18/5b8ebec81b05ce0bf355118992cdb94a97cdfe19e60662f99e2059e61b73/juliapkg-0.1.28-py3-none-any.whl", hash = "sha256:e09640eb5d3465eda0ea40fda912048cc06f34e1a3880eb9e46f4e2c836d8d48", size = 23609, upload-time = "2026-10-24T21:24:34.26Z" },
 ]
 
 [[package]]
@@ -1983,8 +1983,8 @@ name = "pyqt5"
 version = "5.15.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyqt5-qt5", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "pyqt5-sip", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pyqt5-qt5" },
+    { name = "pyqt5-sip" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0e/07/c9ed0bd428df6f87183fca565a79fee19fa7c88c7f00a7f011ab4379e77a/PyQt5-5.15.11.tar.gz", hash = "sha256:fda45743ebb4a27b4b1a51c6d8ef455c4c1b5d610c90d2934c7802b5c1557c52", size = 3216775, upload-time = "2024-07-19T08:39:57.756Z" }
 wheels = [
